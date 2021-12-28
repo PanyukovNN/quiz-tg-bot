@@ -1,0 +1,15 @@
+server:
+  port: 80
+  servlet:
+    contextPath: /api
+
+spring:
+  data:
+    mongodb:
+      host: ${SPRING_DATA_MONGODB_HOST:localhost}
+      port: 27017
+      database: quiztgbot
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update

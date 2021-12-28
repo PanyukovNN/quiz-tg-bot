@@ -1,0 +1,9 @@
+/.gradle/
+/.idea/
+/password
+/jenkins-pipeline
+**.jar
+build/
+/Dockerfile
+**.txt
+**.iml
