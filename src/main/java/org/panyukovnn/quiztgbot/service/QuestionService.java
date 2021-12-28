@@ -6,7 +6,7 @@ import org.panyukovnn.quiztgbot.model.Question;
 import org.panyukovnn.quiztgbot.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.panyukovnn.quiztgbot.model.Constants.WRONG_QUESTION_ID_ERROR_MSG;
 
@@ -35,5 +35,23 @@ public class QuestionService {
         }
 
         return questionRepository.save(templateQuestion);
+    }
+
+    /**
+     * Найти все вопросы
+     *
+     * @return список всех ответов
+     */
+    public List<Question> findAll() {
+        return questionRepository.findAll();
+    }
+
+    /**
+     * Удалить по id
+     *
+     * @param id идентификатор
+     */
+    public void deleteById(String id) {
+        questionRepository.deleteById(id);
     }
 }

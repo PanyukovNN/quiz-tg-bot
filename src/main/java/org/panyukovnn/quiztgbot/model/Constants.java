@@ -10,6 +10,7 @@ public final class Constants {
      * Сообщения
      */
     public static final String ERROR_OCCURRED_MSG = "Возникла ошибка: ";
+    public static final String QUESTION_SUCCESSFULLY_DELETED = "Вопрос \"%s\" успешно удален";
 
     /**
      * Ключи
