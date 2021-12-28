@@ -12,6 +12,7 @@ ext.library = [
         'springBootAOP':'org.springframework.boot:spring-boot-starter-aop',
         'springSwagger':'io.springfox:springfox-swagger2:3.0.0',
         'springSwaggerUI':'io.springfox:springfox-swagger-ui:3.0.0',
+        'springTelegram':'org.telegram:telegrambots-spring-boot-starter:5.5.0',
 
         'kafkaClients':'org.apache.kafka:kafka-clients:2.8.0',
         'kafkaCommon':'org.apache.kafka:kafka_2.13:2.8.0',
@@ -20,6 +21,10 @@ ext.library = [
 
         'commonsIo':'commons-io:commons-io:2.8.0',
         'guava':'com.google.guava:guava:31.0.1-jre',
+
+        'telegram':'org.telegram:telegrambots:5.5.0',
+        'telegrambotmeta':'org.telegram:telegrambots-meta:5.5.0',
+        'telegrambotextensions':'org.telegram:telegrambotsextensions:5.5.0',
 ]
 
 ext.libraryTest = [
