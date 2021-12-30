@@ -11,12 +11,12 @@ public class QuizBotNonCommandService {
     /**
      * Обработка сообщения пользователя
      *
-     * @param chatId
-     * @param userName
-     * @param text
-     * @return
+     * @param text текст сообщения пользователя
+     * @return текст ответа
      */
-    public String processMessage(Long chatId, String userName, String text) {
-        return null;
+    public String processMessage(String text) {
+
+
+        return text;
     }
 }

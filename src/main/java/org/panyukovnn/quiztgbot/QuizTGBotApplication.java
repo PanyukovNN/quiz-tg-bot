@@ -1,5 +1,6 @@
 package org.panyukovnn.quiztgbot;
 
+import org.panyukovnn.quiztgbot.model.Constants;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;

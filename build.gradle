@@ -53,3 +53,8 @@ dependencies {
 test {
     useJUnitPlatform()
 }
+
+bootJar {
+    archiveVersion = ''
+    mainClass = 'org.panyukovnn.quiztgbot.QuizTGBotApplication'
+}

@@ -26,6 +26,6 @@ public class StartCommand implements IBotCommand {
 
     @Override
     public void processMessage(AbsSender absSender, Message message, String[] arguments) {
-
+        System.out.println("start");
     }
 }
