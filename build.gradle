@@ -35,6 +35,8 @@ dependencies {
 
     annotationProcessor library.lombok
 
+    implementation library.commonsLang3
+
     implementation library.telegram
     implementation library.telegrambotmeta
     implementation library.telegrambotextensions

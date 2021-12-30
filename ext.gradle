@@ -21,7 +21,7 @@ ext.library = [
 
         'springKafka':'org.springframework.kafka:spring-kafka:2.7.5',
 
-        'commonsIo':'commons-io:commons-io:2.8.0',
+        'commonsLang3':'org.apache.commons:commons-lang3:3.12.0',
         'guava':'com.google.guava:guava:31.0.1-jre',
 
         'telegram':'org.telegram:telegrambots:5.5.0',

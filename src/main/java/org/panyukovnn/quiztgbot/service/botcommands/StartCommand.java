@@ -2,7 +2,6 @@ package org.panyukovnn.quiztgbot.service.botcommands;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.panyukovnn.quiztgbot.service.DateTimeService;
 import org.panyukovnn.quiztgbot.service.QuizBotNonCommandService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
@@ -34,6 +33,10 @@ public class StartCommand implements IBotCommand {
 
     @Override
     public void processMessage(AbsSender absSender, Message message, String[] arguments) {
-        nonCommandService.processMessage(message.getText());
+        try {
+            nonCommandService.processMessage(message.getText(), (text) -> {});
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 }

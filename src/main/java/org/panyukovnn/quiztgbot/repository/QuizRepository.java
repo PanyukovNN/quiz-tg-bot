@@ -1,12 +1,12 @@
 package org.panyukovnn.quiztgbot.repository;
 
-import org.panyukovnn.quiztgbot.model.Question;
+import org.panyukovnn.quiztgbot.model.Quiz;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Репозиторий вопросов
+ * Репозиторий викторин
  */
 @Repository
-public interface QuestionRepository extends MongoRepository<Question, String> {
+public interface QuizRepository extends MongoRepository<Quiz, String> {
 }
