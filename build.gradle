@@ -46,6 +46,7 @@ dependencies {
     implementation library.springBootDataMongo
     implementation library.springBootValidation
     implementation library.springTelegram
+    implementation library.jasypt
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }

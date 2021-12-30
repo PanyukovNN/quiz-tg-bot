@@ -21,10 +21,4 @@ public final class Constants {
      * Сообщения об ошибке
      */
     public static final String WRONG_QUESTION_ID_ERROR_MSG = "Неверный id вопроса";
-
-    /**
-     * Прочие
-     */
-    public static final String BOT_NAME = System.getenv("BOT_NAME");
-    public static final String BOT_TOKEN = System.getenv("BOT_TOKEN");
 }

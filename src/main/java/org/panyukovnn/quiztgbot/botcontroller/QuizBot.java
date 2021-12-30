@@ -2,6 +2,7 @@ package org.panyukovnn.quiztgbot.botcontroller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.panyukovnn.quiztgbot.property.BotProperty;
 import org.panyukovnn.quiztgbot.service.QuizBotNonCommandService;
 import org.panyukovnn.quiztgbot.service.botcommands.StartCommand;
 import org.springframework.stereotype.Service;
@@ -13,9 +14,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
 
-import static org.panyukovnn.quiztgbot.model.Constants.BOT_NAME;
-import static org.panyukovnn.quiztgbot.model.Constants.BOT_TOKEN;
-
 /**
  * Основной класс бота
  */
@@ -24,6 +22,7 @@ import static org.panyukovnn.quiztgbot.model.Constants.BOT_TOKEN;
 @RequiredArgsConstructor
 public class QuizBot extends TelegramLongPollingCommandBot {
 
+    private final BotProperty botProperty;
     private final StartCommand startCommand;
     private final QuizBotNonCommandService nonCommandService;
 
@@ -34,12 +33,12 @@ public class QuizBot extends TelegramLongPollingCommandBot {
 
     @Override
     public String getBotToken() {
-        return BOT_TOKEN;
+        return botProperty.getBOT_TOKEN();
     }
 
     @Override
     public String getBotUsername() {
-        return BOT_NAME;
+        return botProperty.getBOT_NAME();
     }
 
     /**
@@ -58,8 +57,8 @@ public class QuizBot extends TelegramLongPollingCommandBot {
     /**
      * Отправка ответа
      *
-     * @param chatId   id чата
-     * @param text     текст ответа
+     * @param chatId id чата
+     * @param text текст ответа
      */
     private void executeAnswer(Long chatId, String text) {
         SendMessage answer = new SendMessage();

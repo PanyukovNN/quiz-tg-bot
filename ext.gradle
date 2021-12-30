@@ -14,6 +14,8 @@ ext.library = [
         'springSwaggerUI':'io.springfox:springfox-swagger-ui:3.0.0',
         'springTelegram':'org.telegram:telegrambots-spring-boot-starter:5.5.0',
 
+        'jasypt':'com.github.ulisesbocchio:jasypt-spring-boot-starter:3.0.3',
+
         'kafkaClients':'org.apache.kafka:kafka-clients:2.8.0',
         'kafkaCommon':'org.apache.kafka:kafka_2.13:2.8.0',
 
