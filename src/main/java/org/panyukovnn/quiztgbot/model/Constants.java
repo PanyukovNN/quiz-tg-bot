@@ -21,4 +21,14 @@ public final class Constants {
      * Сообщения об ошибке
      */
     public static final String WRONG_QUESTION_ID_ERROR_MSG = "Неверный id вопроса";
+
+    /**
+     * Смайлики
+     */
+    public static final String CONGRATULATION_FACE = "\uD83E\uDD73";
+    public static final String CHRISTMAS_TREE = "\uD83C\uDF84";
+    public static final String SLEEPING_FACE = "\uD83D\uDE34";
+    public static final String PRESENT = "\uD83C\uDF81";
+    public static final String TWELVE_O_CLOCK = "\uD83D\uDD5B";
+
 }

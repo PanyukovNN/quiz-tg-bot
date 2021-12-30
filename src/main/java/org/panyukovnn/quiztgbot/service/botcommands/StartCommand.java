@@ -1,5 +1,9 @@
 package org.panyukovnn.quiztgbot.service.botcommands;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.panyukovnn.quiztgbot.service.DateTimeService;
+import org.panyukovnn.quiztgbot.service.QuizBotNonCommandService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -8,11 +12,15 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 /**
  * Служебная команда /start
  */
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class StartCommand implements IBotCommand {
 
     private static final String IDENTIFIER = "start";
     private static final String DESCRIPTION = "Старт";
+
+    private final QuizBotNonCommandService nonCommandService;
 
     @Override
     public String getCommandIdentifier() {
@@ -26,6 +34,6 @@ public class StartCommand implements IBotCommand {
 
     @Override
     public void processMessage(AbsSender absSender, Message message, String[] arguments) {
-        System.out.println("start");
+        nonCommandService.processMessage(message.getText());
     }
 }

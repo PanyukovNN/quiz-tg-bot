@@ -42,14 +42,16 @@ public class QuizBot extends TelegramLongPollingCommandBot {
     }
 
     /**
-     * Обработка простого сообщения бользователя
+     * Обработка простого сообщения пользователя
      */
     @Override
     public void processNonCommandUpdate(Update update) {
         Message msg = update.getMessage();
         Long chatId = msg.getChatId();
 
-        String answer = nonCommandService.processMessage(msg.getText() + "1");
+        //TODO ограничить userid
+
+        String answer = nonCommandService.processMessage(msg.getText());
 
         executeAnswer(chatId, answer);
     }
