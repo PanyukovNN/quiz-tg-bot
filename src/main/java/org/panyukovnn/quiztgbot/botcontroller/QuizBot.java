@@ -50,7 +50,7 @@ public class QuizBot extends TelegramLongPollingCommandBot {
         Message msg = update.getMessage();
         Long chatId = msg.getChatId();
 
-        String answer = nonCommandService.processMessage(msg.getText());
+        String answer = nonCommandService.processMessage(msg.getText() + "1");
 
         executeAnswer(chatId, answer);
     }
