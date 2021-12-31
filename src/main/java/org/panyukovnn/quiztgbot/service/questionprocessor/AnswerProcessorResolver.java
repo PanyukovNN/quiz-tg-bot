@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static org.panyukovnn.quiztgbot.model.AnswerType.SPECIAL_WITH_IMG;
+
 /**
  * Менеджер обработчиков ответов
  */
@@ -17,8 +19,12 @@ public class AnswerProcessorResolver {
 
     private final Map<AnswerType, AnswerProcessor> type2Processor = new HashMap<>();
 
-    public AnswerProcessorResolver(Set<AnswerProcessor> answerProcessors) {
+    public AnswerProcessorResolver(NoMatterOptionAnswerProcessorImpl noMatterOptionAnswerProcessor,
+                                   Set<AnswerProcessor> answerProcessors) {
         answerProcessors.forEach(ap -> type2Processor.put(ap.getType(), ap));
+
+        //TODO убрать
+        type2Processor.put(SPECIAL_WITH_IMG, noMatterOptionAnswerProcessor);
     }
 
     public AnswerProcessor getProcessor(@NotNull AnswerType type) {

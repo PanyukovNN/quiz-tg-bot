@@ -31,8 +31,11 @@ public class QuizConfig {
 
         if (quiz.getOffset() != 0) {
             quiz.setOffset(0);
-            quizRepository.save(quiz);
         }
+
+        quiz.getQuestionList()
+                .forEach(question -> question.setAsked(false));
+        quizRepository.save(quiz);
 
         return quiz;
     }

@@ -10,6 +10,8 @@ public enum AnswerType {
      */
     NO_MATTER_TEXT,
 
+    SPECIAL_WITH_IMG,
+
     /**
      * Без разницы какой ответ из предложенных вариантов
      */

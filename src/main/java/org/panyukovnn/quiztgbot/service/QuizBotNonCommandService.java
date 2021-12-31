@@ -1,28 +1,38 @@
 package org.panyukovnn.quiztgbot.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.panyukovnn.quiztgbot.model.*;
 import org.panyukovnn.quiztgbot.repository.QuizRepository;
 import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessInfo;
 import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessor;
 import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessorResolver;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static org.panyukovnn.quiztgbot.model.Constants.*;
 
 /**
  * Обработка простых сообщений пользователя
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuizBotNonCommandService {
@@ -37,63 +47,106 @@ public class QuizBotNonCommandService {
     //TODO remove
     private boolean veryFirstStart = true;
 
+    private Consumer<SendPhoto> photoSender;
+
+    public void setPhotoSender(Consumer<SendPhoto> photoSender) {
+        this.photoSender = photoSender;
+    }
+
     /**
      * Обработка сообщения пользователя
      *
-     * @param message сообщение пользователя
+     * @param chatId идентификатор чата
+     * @param messageText текст сообщения пользователя
      */
-    public SendMessage processMessage(Message message) throws InterruptedException {
+    public void processMessage(String chatId, String messageText, Consumer<SendMessage> sendMessageConsumer) throws FileNotFoundException {
         SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(message.getChatId().toString());
+        sendMessage.setChatId(chatId);
 
         if (!dateTimeService.is2022Year()) {
             String tooEarlyMessage = defineTooEarlyMessage();
             sendMessage.setText(tooEarlyMessage);
 
-            return sendMessage;
+            sendMessageConsumer.accept(sendMessage);
+
+            return;
         }
 
         int offset = quiz.getOffset();
         if (offset >= quiz.getQuestionList().size()) {
-            return sendMessage;
+            return;
         }
 
         Question question = quiz.getQuestionList().get(offset);
 
-        boolean questionAsked = askQuestion(sendMessage, question);
+        if (askQuestion(sendMessage, question)) {
+            question.setAsked(true);
+            quizRepository.save(quiz);
 
-        if (questionAsked) {
-            return sendMessage;
+            if (question.getAnswer().getType() == AnswerType.SPECIAL_WITH_IMG) {
+                SendPhoto sendPhoto = new SendPhoto();
+                sendPhoto.setChatId(chatId);
+                sendPhoto.setPhoto(new InputFile(new File("./photo.jpg")));
+                sendPhoto.setReplyMarkup(sendMessage.getReplyMarkup());
+
+                sendMessage.setReplyMarkup(null);
+                sendMessageConsumer.accept(sendMessage);
+
+                photoSender.accept(sendPhoto);
+            } else {
+                sendMessageConsumer.accept(sendMessage);
+            }
+
+            return;
         }
 
         Answer answer = question.getAnswer();
 
         AnswerProcessor answerProcessor = answerProcessorResolver.getProcessor(answer.getType());
 
-        AnswerProcessInfo answerProcessInfo = answerProcessor.process(message.getText(), answer);
-        sendMessage.setText(answerProcessInfo.getTextToReturn());
+        AnswerProcessInfo answerProcessInfo = answerProcessor.process(messageText, answer);
+        if (StringUtils.isNotBlank(answerProcessInfo.getTextToReturn())) {
+            sendMessage.setText(answerProcessInfo.getTextToReturn());
+            sendMessageConsumer.accept(sendMessage);
+        }
+
+        quiz.setOffset(quiz.getOffset() + 1);
+        quizRepository.save(quiz);
 
         if (answerProcessInfo.isNeedNextQuestion()) {
-            Thread.sleep(1000);
+            sleepSafe();
             int nextOffset = quiz.getOffset();
             if (nextOffset >= quiz.getQuestionList().size()) {
-                return sendMessage;
+                return;
             }
             Question nextQuestion = quiz.getQuestionList().get(nextOffset);
             askQuestion(sendMessage, nextQuestion);
-        }
+            nextQuestion.setAsked(true);
+            quizRepository.save(quiz);
 
-        return sendMessage;
+            if (nextQuestion.getAnswer().getType() == AnswerType.SPECIAL_WITH_IMG) {
+                SendPhoto sendPhoto = new SendPhoto();
+                sendPhoto.setChatId(chatId);
+                sendPhoto.setPhoto(new InputFile(new File("./photo.jpg")));
+                sendPhoto.setReplyMarkup(sendMessage.getReplyMarkup());
+
+                sendMessage.setReplyMarkup(null);
+                sendMessageConsumer.accept(sendMessage);
+
+                photoSender.accept(sendPhoto);
+            } else {
+                sendMessageConsumer.accept(sendMessage);
+            }
+        }
     }
 
     private String defineTooEarlyMessage() {
         if (veryFirstStart) {
             veryFirstStart = false;
 
-            return  "Ура, ты нашла меня! " + CONGRATULATION_FACE +
-                    " Давай-ка посмотрим который сейчас год... Хмм, 2021..." +
-                    " Хозяин поставил на меня блокировку до 2022 года, приходи сразу после боя курантов " + TWELVE_O_CLOCK +
-                    " И мы вместе найдём подарок " + PRESENT;
+            return  "Привет! Давай-ка посмотрим который сейчас год... 2021?" +
+                    " Дед Мороз поставил меня на блокировку до 2022 года, приходи сразу после боя курантов " + TWELVE_O_CLOCK +
+                    " И мы вместе выберем тебе подарок " + PRESENT;
         }
 
         return "Пока рано, надо дождаться Нового Года...";
@@ -101,9 +154,6 @@ public class QuizBotNonCommandService {
 
     private boolean askQuestion(SendMessage sendMessage, Question question) {
         if (!question.isAsked()) {
-            question.setAsked(true);
-            quizRepository.save(quiz);
-
             sendMessage.setText(question.getText());
             createKeyboard(question).ifPresent(sendMessage::setReplyMarkup);
 
@@ -116,7 +166,8 @@ public class QuizBotNonCommandService {
     private Optional<ReplyKeyboard> createKeyboard(Question question) {
         if (question.getAnswer().getType() == AnswerType.MULTI_OPTION
                 || question.getAnswer().getType() == AnswerType.SINGLE_OPTION
-                || question.getAnswer().getType() == AnswerType.NO_MATTER_OPTION) {
+                || question.getAnswer().getType() == AnswerType.NO_MATTER_OPTION
+                || question.getAnswer().getType() == AnswerType.SPECIAL_WITH_IMG) {
 
             if (question.getAnswer().getOptions().isEmpty()) {
                 return Optional.empty();
@@ -143,5 +194,13 @@ public class QuizBotNonCommandService {
         }
 
         return Optional.empty();
+    }
+
+    private void sleepSafe() {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            log.error(e.getMessage(), e);
+        }
     }
 }

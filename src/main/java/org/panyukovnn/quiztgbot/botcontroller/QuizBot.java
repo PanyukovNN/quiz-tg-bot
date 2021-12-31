@@ -8,12 +8,12 @@ import org.panyukovnn.quiztgbot.service.botcommands.StartCommand;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
+import java.io.FileNotFoundException;
 
 /**
  * Основной класс бота
@@ -30,6 +30,7 @@ public class QuizBot extends TelegramLongPollingCommandBot {
     @PostConstruct
     private void postConstruct() {
         register(startCommand);
+        nonCommandService.setPhotoSender(this::executePhoto);
     }
 
     @Override
@@ -54,12 +55,20 @@ public class QuizBot extends TelegramLongPollingCommandBot {
 
             nonCommandService.lock.set(true);
             try {
-                Message message = update.getMessage();
+                String messageText = "";
+                String chatId = "";
+
+                if (update.hasMessage()) {
+                    messageText = update.getMessage().getText();
+                    chatId = update.getMessage().getChatId().toString();
+                } else if (update.hasCallbackQuery()) {
+                    messageText = update.getCallbackQuery().getData();
+                    chatId = update.getCallbackQuery().getMessage().getChatId().toString();
+                }
 
                 //TODO ограничить userid
-                SendMessage sendMessage = nonCommandService.processMessage(message);
-                executeAnswer(sendMessage);
-            } catch (InterruptedException e) {
+                nonCommandService.processMessage(chatId, messageText, (this::executeAnswer));
+            } catch (FileNotFoundException e) {
                 log.error(e.getMessage(), e);
             } finally {
                 nonCommandService.lock.set(false);
@@ -75,6 +84,14 @@ public class QuizBot extends TelegramLongPollingCommandBot {
     private void executeAnswer(SendMessage sendMessage) {
         try {
             execute(sendMessage);
+        } catch (TelegramApiException e) {
+            log.error(e.getMessage(), e);
+        }
+    }
+
+    private void executePhoto(SendPhoto sendPhoto) {
+        try {
+            execute(sendPhoto);
         } catch (TelegramApiException e) {
             log.error(e.getMessage(), e);
         }

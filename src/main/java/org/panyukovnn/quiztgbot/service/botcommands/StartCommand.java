@@ -1,11 +1,11 @@
 package org.panyukovnn.quiztgbot.service.botcommands;
 
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.panyukovnn.quiztgbot.service.QuizBotNonCommandService;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -34,12 +34,17 @@ public class StartCommand implements IBotCommand {
     }
 
     @Override
+    @SneakyThrows
     public void processMessage(AbsSender absSender, Message message, String[] arguments) {
-        try {
-            SendMessage sendMessage = nonCommandService.processMessage(message);
-            absSender.execute(sendMessage);
-        } catch (InterruptedException | TelegramApiException e) {
-            log.error(e.getMessage(), e);
-        }
+        String messageText = message.getText();
+        String chatId = message.getChatId().toString();
+
+        nonCommandService.processMessage(chatId, messageText, (sendMessage) -> {
+            try {
+                absSender.execute(sendMessage);
+            } catch (TelegramApiException e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
