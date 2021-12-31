@@ -41,6 +41,7 @@ public class QuizController {
      */
     @PostMapping("/set-question-list")
     public String setQuestionList(@RequestBody @Valid SetQuestionListRequest request) {
+        quiz.setOffset(0);
         quizService.setQuestionList(request.getQuestionList());
 
         return QUESTION_LIST_SUCCESSFULLY_SET;

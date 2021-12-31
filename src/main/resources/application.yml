@@ -22,4 +22,4 @@ jasypt:
 bot:
   BOT_NAME: ENC(z1ppwOIhTdvL3T1A/iS1nW2o2WJwgCr4d4UpdPPKC3A=)
   BOT_TOKEN: ENC(j5E2zkdWb+tlyvYgeSSHCmnYnDlxr0lirIiuIS6eV7r7GLQB4cC7pkJ2WVydte7mDlALXeyT5aw=)
-  time-limit-enabled: true
+  time-limit-enabled: false # TODO true

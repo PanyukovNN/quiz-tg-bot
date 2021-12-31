@@ -10,6 +10,7 @@ import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingC
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
@@ -53,12 +54,11 @@ public class QuizBot extends TelegramLongPollingCommandBot {
 
             nonCommandService.lock.set(true);
             try {
-                Message msg = update.getMessage();
-                Long chatId = msg.getChatId();
+                Message message = update.getMessage();
 
                 //TODO ограничить userid
-
-                nonCommandService.processMessage(msg.getText(), (text) -> executeAnswer(chatId, text));
+                SendMessage sendMessage = nonCommandService.processMessage(message);
+                executeAnswer(sendMessage);
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);
             } finally {
@@ -68,18 +68,13 @@ public class QuizBot extends TelegramLongPollingCommandBot {
     }
 
     /**
-     * Отправка ответа
+     * Отправка соообщения пользователю
      *
-     * @param chatId id чата
-     * @param text текст ответа
+     * @param sendMessage сообщение, отправляемое пользователю
      */
-    private void executeAnswer(Long chatId, String text) {
-        SendMessage answer = new SendMessage();
-        answer.setText(text);
-        answer.setChatId(chatId.toString());
-
+    private void executeAnswer(SendMessage sendMessage) {
         try {
-            execute(answer);
+            execute(sendMessage);
         } catch (TelegramApiException e) {
             log.error(e.getMessage(), e);
         }

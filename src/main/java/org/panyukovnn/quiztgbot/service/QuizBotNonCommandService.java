@@ -1,19 +1,22 @@
 package org.panyukovnn.quiztgbot.service;
 
-import lombok.Builder;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-import org.apache.commons.lang3.StringUtils;
-import org.panyukovnn.quiztgbot.exception.QuizTgBotException;
-import org.panyukovnn.quiztgbot.model.Answer;
-import org.panyukovnn.quiztgbot.model.AnswerType;
-import org.panyukovnn.quiztgbot.model.Question;
-import org.panyukovnn.quiztgbot.model.Quiz;
+import org.panyukovnn.quiztgbot.model.*;
+import org.panyukovnn.quiztgbot.repository.QuizRepository;
+import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessInfo;
+import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessor;
+import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessorResolver;
 import org.springframework.stereotype.Service;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import static org.panyukovnn.quiztgbot.model.Constants.*;
 
@@ -25,7 +28,9 @@ import static org.panyukovnn.quiztgbot.model.Constants.*;
 public class QuizBotNonCommandService {
 
     private final Quiz quiz;
+    private final QuizRepository quizRepository;
     private final DateTimeService dateTimeService;
+    private final AnswerProcessorResolver answerProcessorResolver;
 
     public final AtomicBoolean lock = new AtomicBoolean();
 
@@ -35,100 +40,108 @@ public class QuizBotNonCommandService {
     /**
      * Обработка сообщения пользователя
      *
-     * @param messageText текст сообщения пользователя
+     * @param message сообщение пользователя
      */
-    public void processMessage(String messageText, Consumer<String> sendMessage) throws InterruptedException {
+    public SendMessage processMessage(Message message) throws InterruptedException {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(message.getChatId().toString());
+
         if (!dateTimeService.is2022Year()) {
-            if (veryFirstStart) {
-                veryFirstStart = false;
+            String tooEarlyMessage = defineTooEarlyMessage();
+            sendMessage.setText(tooEarlyMessage);
 
-                sendMessage.accept("Ура, ты нашла меня! " + CONGRATULATION_FACE +
-                        " Давай-ка посмотрим который сейчас год... Хмм, 2021..." +
-                        " Хозяин поставил на меня блокировку до 2022 года, приходи сразу после боя курантов " + TWELVE_O_CLOCK +
-                        " И мы вместе найдём подарок " + PRESENT);
-                return;
-            }
-
-            sendMessage.accept("Пока рано, надо дождаться Нового Года...");
-            return;
+            return sendMessage;
         }
 
         int offset = quiz.getOffset();
         if (offset >= quiz.getQuestionList().size()) {
-            return;
+            return sendMessage;
         }
 
         Question question = quiz.getQuestionList().get(offset);
-        ProcessInfo processInfo = processQuestion(messageText, question);
-        sendMessage.accept(processInfo.getReturnedText());
 
-        if (processInfo.needNextQuestion) {
+        boolean questionAsked = askQuestion(sendMessage, question);
+
+        if (questionAsked) {
+            return sendMessage;
+        }
+
+        Answer answer = question.getAnswer();
+
+        AnswerProcessor answerProcessor = answerProcessorResolver.getProcessor(answer.getType());
+
+        AnswerProcessInfo answerProcessInfo = answerProcessor.process(message.getText(), answer);
+        sendMessage.setText(answerProcessInfo.getTextToReturn());
+
+        if (answerProcessInfo.isNeedNextQuestion()) {
             Thread.sleep(1000);
             int nextOffset = quiz.getOffset();
             if (nextOffset >= quiz.getQuestionList().size()) {
-                return;
+                return sendMessage;
             }
             Question nextQuestion = quiz.getQuestionList().get(nextOffset);
-
-            ProcessInfo nextProcessInfo = processQuestion(messageText, nextQuestion);
-            sendMessage.accept(nextProcessInfo.getReturnedText());
+            askQuestion(sendMessage, nextQuestion);
         }
+
+        return sendMessage;
     }
 
-    private ProcessInfo processQuestion(String messageText, Question question) {
-        Answer answer = question.getAnswer();
+    private String defineTooEarlyMessage() {
+        if (veryFirstStart) {
+            veryFirstStart = false;
 
+            return  "Ура, ты нашла меня! " + CONGRATULATION_FACE +
+                    " Давай-ка посмотрим который сейчас год... Хмм, 2021..." +
+                    " Хозяин поставил на меня блокировку до 2022 года, приходи сразу после боя курантов " + TWELVE_O_CLOCK +
+                    " И мы вместе найдём подарок " + PRESENT;
+        }
+
+        return "Пока рано, надо дождаться Нового Года...";
+    }
+
+    private boolean askQuestion(SendMessage sendMessage, Question question) {
         if (!question.isAsked()) {
             question.setAsked(true);
+            quizRepository.save(quiz);
 
-            //TODO option questions
-            return ProcessInfo.builder()
-                    .returnedText(question.getText())
-                    .needNextQuestion(false)
-                    .build();
+            sendMessage.setText(question.getText());
+            createKeyboard(question).ifPresent(sendMessage::setReplyMarkup);
+
+            return true;
         }
 
-        if (answer.getType() == AnswerType.MULTI_OPTION) {
-            // Задать вопрос с вариантами ответа
-        }
-
-        if (answer.getType() == AnswerType.SINGLE_OPTION) {
-            // Задать вопрос с вариантом ответа
-        } else if (answer.getType() == AnswerType.TEXT) {
-            if (StringUtils.containsIgnoreCase(messageText, answer.getKey())) {
-                quiz.setOffset(quiz.getOffset() + 1);
-
-                return ProcessInfo.builder()
-                        .returnedText(answer.getRightReply())
-                        .needNextQuestion(true)
-                        .build();
-            }
-
-            return ProcessInfo.builder()
-                    .returnedText(answer.getWrongReply())
-                    .needNextQuestion(false)
-                    .build();
-        } else if (answer.getType() == AnswerType.NO_MATTER) {
-            quiz.setOffset(quiz.getOffset() + 1);
-
-            return ProcessInfo.builder()
-                    .returnedText(answer.getRightReply())
-                    .needNextQuestion(true)
-                    .build();
-        }
-
-        throw new QuizTgBotException("Произошла ошибка при обработке вопроса");
+        return false;
     }
 
-    /**
-     * Результат обработки вопроса
-     */
-    @Getter
-    @Setter
-    @Builder
-    private static class ProcessInfo {
+    private Optional<ReplyKeyboard> createKeyboard(Question question) {
+        if (question.getAnswer().getType() == AnswerType.MULTI_OPTION
+                || question.getAnswer().getType() == AnswerType.SINGLE_OPTION
+                || question.getAnswer().getType() == AnswerType.NO_MATTER_OPTION) {
 
-        private final String returnedText;
-        private final boolean needNextQuestion;
+            if (question.getAnswer().getOptions().isEmpty()) {
+                return Optional.empty();
+            }
+
+            InlineKeyboardMarkup inlineKeyboardMarkup =new InlineKeyboardMarkup();
+
+            List<List<InlineKeyboardButton>> buttonRows = new ArrayList<>();
+
+            for (Option option : question.getAnswer().getOptions()) {
+                List<InlineKeyboardButton> buttonRow = new ArrayList<>();
+
+                InlineKeyboardButton inlineKeyboardButton = new InlineKeyboardButton();
+                inlineKeyboardButton.setText(option.getText());
+                inlineKeyboardButton.setCallbackData(option.getText());
+
+                buttonRow.add(inlineKeyboardButton);
+                buttonRows.add(buttonRow);
+            }
+
+            inlineKeyboardMarkup.setKeyboard(buttonRows);
+
+            return Optional.of(inlineKeyboardMarkup);
+        }
+
+        return Optional.empty();
     }
 }

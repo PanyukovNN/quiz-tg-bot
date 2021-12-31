@@ -6,14 +6,14 @@ package org.panyukovnn.quiztgbot.model;
 public enum AnswerType {
 
     /**
-     * Без разницы какой ответ (всегда правильный)
+     * Без разницы какой текстовый ответ
      */
-    NO_MATTER,
+    NO_MATTER_TEXT,
 
     /**
-     * Немедленно задать следующий вопрос
+     * Без разницы какой ответ из предложенных вариантов
      */
-    NEXT_QUESTION,
+    NO_MATTER_OPTION,
 
     /**
      * Текстовый
