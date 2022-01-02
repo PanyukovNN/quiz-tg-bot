@@ -22,6 +22,8 @@ public final class Constants {
      * Сообщения об ошибке
      */
     public static final String WRONG_QUESTION_ID_ERROR_MSG = "Неверный id вопроса";
+    public static final String ERROR_WHILE_SEND_PHOTO = "Не удалось отправить сообщение с фотографией.";
+    public static final String ERROR_WHILE_SEND_MESSAGE = "Не удалось отправить сообщение.";
 
     /**
      * Смайлики

@@ -9,25 +9,21 @@ import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessInfo;
 import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessor;
 import org.panyukovnn.quiztgbot.service.questionprocessor.AnswerProcessorResolver;
 import org.springframework.stereotype.Service;
-import org.telegram.telegrambots.meta.api.methods.PartialBotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
-import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
-import static org.panyukovnn.quiztgbot.model.Constants.*;
+import static org.panyukovnn.quiztgbot.model.Constants.PRESENT;
+import static org.panyukovnn.quiztgbot.model.Constants.TWELVE_O_CLOCK;
 
 /**
  * Обработка простых сообщений пользователя
@@ -40,6 +36,7 @@ public class QuizBotNonCommandService {
     private final Quiz quiz;
     private final QuizRepository quizRepository;
     private final DateTimeService dateTimeService;
+    private final QuizBotMessageExecutor quizBotMessageExecutor;
     private final AnswerProcessorResolver answerProcessorResolver;
 
     public final AtomicBoolean lock = new AtomicBoolean();
@@ -47,19 +44,13 @@ public class QuizBotNonCommandService {
     //TODO remove
     private boolean veryFirstStart = true;
 
-    private Consumer<SendPhoto> photoSender;
-
-    public void setPhotoSender(Consumer<SendPhoto> photoSender) {
-        this.photoSender = photoSender;
-    }
-
     /**
      * Обработка сообщения пользователя
      *
      * @param chatId идентификатор чата
      * @param messageText текст сообщения пользователя
      */
-    public void processMessage(String chatId, String messageText, Consumer<SendMessage> sendMessageConsumer) throws FileNotFoundException {
+    public void processMessage(String chatId, String messageText) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
 
@@ -67,7 +58,7 @@ public class QuizBotNonCommandService {
             String tooEarlyMessage = defineTooEarlyMessage();
             sendMessage.setText(tooEarlyMessage);
 
-            sendMessageConsumer.accept(sendMessage);
+            quizBotMessageExecutor.executeSendMessage(sendMessage);
 
             return;
         }
@@ -90,11 +81,11 @@ public class QuizBotNonCommandService {
                 sendPhoto.setReplyMarkup(sendMessage.getReplyMarkup());
 
                 sendMessage.setReplyMarkup(null);
-                sendMessageConsumer.accept(sendMessage);
+                quizBotMessageExecutor.executeSendMessage(sendMessage);
 
-                photoSender.accept(sendPhoto);
+                quizBotMessageExecutor.executeSendPhoto(sendPhoto);
             } else {
-                sendMessageConsumer.accept(sendMessage);
+                quizBotMessageExecutor.executeSendMessage(sendMessage);
             }
 
             return;
@@ -107,7 +98,7 @@ public class QuizBotNonCommandService {
         AnswerProcessInfo answerProcessInfo = answerProcessor.process(messageText, answer);
         if (StringUtils.isNotBlank(answerProcessInfo.getTextToReturn())) {
             sendMessage.setText(answerProcessInfo.getTextToReturn());
-            sendMessageConsumer.accept(sendMessage);
+            quizBotMessageExecutor.executeSendMessage(sendMessage);
         }
 
         quiz.setOffset(quiz.getOffset() + 1);
@@ -131,11 +122,11 @@ public class QuizBotNonCommandService {
                 sendPhoto.setReplyMarkup(sendMessage.getReplyMarkup());
 
                 sendMessage.setReplyMarkup(null);
-                sendMessageConsumer.accept(sendMessage);
+                quizBotMessageExecutor.executeSendMessage(sendMessage);
 
-                photoSender.accept(sendPhoto);
+                quizBotMessageExecutor.executeSendPhoto(sendPhoto);
             } else {
-                sendMessageConsumer.accept(sendMessage);
+                quizBotMessageExecutor.executeSendMessage(sendMessage);
             }
         }
     }
