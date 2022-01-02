@@ -2,7 +2,6 @@ package org.panyukovnn.quiztgbot.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -19,8 +18,6 @@ import javax.validation.constraints.NotNull;
 @Document(collection = "question")
 public class Question {
 
-    private String id;
-
     /**
      * Текст
      */
@@ -33,4 +30,9 @@ public class Question {
     @Valid
     @NotNull
     private Answer answer;
+
+    /**
+     * Задан ли вопрос
+     */
+    private boolean asked;
 }

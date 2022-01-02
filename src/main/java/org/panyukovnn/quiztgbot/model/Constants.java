@@ -10,7 +10,8 @@ public final class Constants {
      * Сообщения
      */
     public static final String ERROR_OCCURRED_MSG = "Возникла ошибка: ";
-    public static final String QUESTION_SUCCESSFULLY_DELETED = "Вопрос \"%s\" успешно удален";
+    public static final String QUESTION_SUCCESSFULLY_DELETED = "Вопрос \"%s\" успешно удален.";
+    public static final String QUESTION_LIST_SUCCESSFULLY_SET = "Список вопросов успешно задан.";
 
     /**
      * Ключи
@@ -21,10 +22,16 @@ public final class Constants {
      * Сообщения об ошибке
      */
     public static final String WRONG_QUESTION_ID_ERROR_MSG = "Неверный id вопроса";
+    public static final String ERROR_WHILE_SEND_PHOTO = "Не удалось отправить сообщение с фотографией.";
+    public static final String ERROR_WHILE_SEND_MESSAGE = "Не удалось отправить сообщение.";
 
     /**
-     * Прочие
+     * Смайлики
      */
-    public static final String BOT_NAME = System.getenv("BOT_NAME");
-    public static final String BOT_TOKEN = System.getenv("BOT_TOKEN");
+    public static final String CONGRATULATION_FACE = "\uD83E\uDD73";
+    public static final String CHRISTMAS_TREE = "\uD83C\uDF84";
+    public static final String SLEEPING_FACE = "\uD83D\uDE34";
+    public static final String PRESENT = "\uD83C\uDF81";
+    public static final String TWELVE_O_CLOCK = "\uD83D\uDD5B";
+
 }

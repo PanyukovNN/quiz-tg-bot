@@ -1,5 +1,6 @@
 package org.panyukovnn.quiztgbot.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import java.util.List;
 @Setter
 @ValidAnswer
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Answer {
 
     /**
@@ -28,6 +30,16 @@ public class Answer {
      * Варианты ответа, если не текстовы тип
      */
     private List<Option> options = new ArrayList<>();
+
+    /**
+     * Реплика при правильном ответе
+     */
+    private String rightReply;
+
+    /**
+     * Реплика при ошибочном ответе
+     */
+    private String wrongReply;
 
     /**
      * Тип ответа

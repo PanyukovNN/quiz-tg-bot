@@ -35,6 +35,8 @@ dependencies {
 
     annotationProcessor library.lombok
 
+    implementation library.commonsLang3
+
     implementation library.telegram
     implementation library.telegrambotmeta
     implementation library.telegrambotextensions
@@ -46,6 +48,7 @@ dependencies {
     implementation library.springBootDataMongo
     implementation library.springBootValidation
     implementation library.springTelegram
+    implementation library.jasypt
 
     testImplementation group: 'junit', name: 'junit', version: '4.12'
 }
