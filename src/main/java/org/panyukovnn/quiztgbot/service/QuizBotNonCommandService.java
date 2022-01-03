@@ -36,7 +36,6 @@ public class QuizBotNonCommandService {
     private final Quiz quiz;
     private final QuizRepository quizRepository;
     private final DateTimeService dateTimeService;
-    private final QuizBotMessageExecutor quizBotMessageExecutor;
     private final AnswerProcessorResolver answerProcessorResolver;
 
     public final AtomicBoolean lock = new AtomicBoolean();
@@ -49,23 +48,25 @@ public class QuizBotNonCommandService {
      *
      * @param chatId идентификатор чата
      * @param messageText текст сообщения пользователя
+     * @return результат обработки сообщения
      */
-    public void processMessage(String chatId, String messageText) {
+    public MessageProcessInfo processMessage(String chatId, String messageText) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
+
+        MessageProcessInfo.MessageProcessInfoBuilder messageProcessInfoBuilder = MessageProcessInfo.builder()
+                .sendMessage(Optional.of(sendMessage));
 
         if (!dateTimeService.is2022Year()) {
             String tooEarlyMessage = defineTooEarlyMessage();
             sendMessage.setText(tooEarlyMessage);
 
-            quizBotMessageExecutor.executeSendMessage(sendMessage);
-
-            return;
+            return messageProcessInfoBuilder.build();
         }
 
         int offset = quiz.getOffset();
         if (offset >= quiz.getQuestionList().size()) {
-            return;
+            return messageProcessInfoBuilder.build();
         }
 
         Question question = quiz.getQuestionList().get(offset);
@@ -81,14 +82,11 @@ public class QuizBotNonCommandService {
                 sendPhoto.setReplyMarkup(sendMessage.getReplyMarkup());
 
                 sendMessage.setReplyMarkup(null);
-                quizBotMessageExecutor.executeSendMessage(sendMessage);
 
-                quizBotMessageExecutor.executeSendPhoto(sendPhoto);
-            } else {
-                quizBotMessageExecutor.executeSendMessage(sendMessage);
+                messageProcessInfoBuilder.sendPhoto(Optional.of(sendPhoto));
             }
 
-            return;
+            return messageProcessInfoBuilder.build();
         }
 
         Answer answer = question.getAnswer();

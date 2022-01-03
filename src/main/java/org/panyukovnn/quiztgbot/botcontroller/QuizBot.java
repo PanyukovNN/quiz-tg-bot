@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.panyukovnn.quiztgbot.exception.QuizTgBotException;
 import org.panyukovnn.quiztgbot.property.BotProperty;
-import org.panyukovnn.quiztgbot.service.QuizBotMessageExecutor;
+import org.panyukovnn.quiztgbot.service.MessageProcessInfo;
 import org.panyukovnn.quiztgbot.service.QuizBotNonCommandService;
 import org.panyukovnn.quiztgbot.service.botcommands.StartCommand;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,6 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 import javax.annotation.PostConstruct;
-import java.io.FileNotFoundException;
 
 import static org.panyukovnn.quiztgbot.model.Constants.ERROR_WHILE_SEND_MESSAGE;
 import static org.panyukovnn.quiztgbot.model.Constants.ERROR_WHILE_SEND_PHOTO;
@@ -31,15 +30,10 @@ public class QuizBot extends TelegramLongPollingCommandBot {
     private final BotProperty botProperty;
     private final StartCommand startCommand;
     private final QuizBotNonCommandService nonCommandService;
-    private final QuizBotMessageExecutor quizBotMessageExecutor;
 
     @PostConstruct
     private void postConstruct() {
         register(startCommand);
-
-        // Инкапсулируем логику отправки сообщений в отдельный класс {@link QuizBotMessageExecutor}
-        quizBotMessageExecutor.setSendMessageConsumer(this::executeSendMessage);
-        quizBotMessageExecutor.setSendPhotoConsumer(this::executeSendPhoto);
     }
 
     @Override
@@ -79,7 +73,10 @@ public class QuizBot extends TelegramLongPollingCommandBot {
                 }
 
                 //TODO ограничить userid
-                nonCommandService.processMessage(chatId, messageText);
+                MessageProcessInfo messageProcessInfo = nonCommandService.processMessage(chatId, messageText);
+
+                messageProcessInfo.getSendMessage().ifPresent(this::executeSendMessage);
+                messageProcessInfo.getSendPhoto().ifPresent(this::executeSendPhoto);
             } finally {
                 nonCommandService.lock.set(false);
             }
